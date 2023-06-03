@@ -1,3 +1,6 @@
+### Version
+1.0.0
+
 ### Overview
 Simple scripts for opening and mounting an encrypted partition, or umounting and closing an encrypted partition. Might also have this backup the contents to another encrypted partition, or something like that. Will see how this evolves.
 
