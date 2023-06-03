@@ -56,7 +56,7 @@ done
 
 # Display information about defautl values being pulled from the env
 # if no arguments are provided to this script
-if [$# -eq 0 ]; then
+if [ $# -eq 0 ]; then
     echo "No params were provided. Using environment based defaults"
     echo
 fi
