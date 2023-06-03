@@ -67,7 +67,7 @@ else
 fi
 
 # Identify the file system that the open mapper is mounted to
-echo "Identifying the director the mapper is mounted to"
+echo "Identifying the director the mapper is mounted at"
 MOUNT_DIRECTORY=$(lsblk | grep crypt | grep $CRYPT_NAME | cut -d' ' -f13)
 if [ -z $MOUNT_DIRECTORY ]; then
     echo "No mountpoint is associated with mapper $CRYPT_NAME"
@@ -90,6 +90,7 @@ if [ $PERFORM_UNMOUNT -eq 1 ]; then
     else
         echo "Failed to unmount the mapper"
         exit 1
+    fi
 fi
 
 # Close the open mapper object
@@ -103,4 +104,5 @@ else
     echo "Failed to close mapper interface"
     echo
     exit 1
+fi
 
