@@ -11,9 +11,16 @@ help() {
     echo "Open and mounts an encrypted partition"
     echo 
     echo "-d The full path to the partition (device) that is encrypted"
+    echo "   If this is not provided, then the SECURE_STORAGE_DEVICE_PATH"
+    echo "   env variable will be used for this value"
     echo "-s The directory to mount the partition on. If this is not "
     echo "   provided, then the SECURE_STORAGE_DIRECTORY environment"
     echo "   variable will be used, if it exists"
+    echo "-n The name cryptsetup should give to the mapping for the decrypted"
+    echo "   drive. If not provided, a random set of characters will be used"
+    echo "   for the mapping name"
+    echo "-h Print this help message"
+    echo
 }
 
 # Generate a random id string and set it to the RANDOM_ID variable
@@ -23,7 +30,7 @@ set_random_uuid () {
 }
 
 # Get input argument values
-while getopts "d:s:n:" inputvalue; do
+while getopts "d:s:n:h" inputvalue; do
     case "${inputvalue}" in
         d)
             ENCRYPTED_DEVICE=${OPTARG}
@@ -34,6 +41,10 @@ while getopts "d:s:n:" inputvalue; do
         n)
             CRYPT_NAME=${OPTARG}
             ;;
+        h)
+            help
+            exit 0
+            ;;
         *)
             echo "Unrecognized arg provided"
             echo
@@ -43,29 +54,42 @@ while getopts "d:s:n:" inputvalue; do
     esac
 done
 
-# Check input argument values. Verify the provided device is a valid
-# device. If so, print an info message indicating that
-if [ $# -eq 0 ]; then
-    echo "No params were provided. Do you need help?"
-    echo
-    help
-    exit 1
-elif [ -z $ENCRYPTED_DEVICE ]; then
-    echo "No device provided"
-    exit 1
-elif [ ! -b $ENCRYPTED_DEVICE ]; then
-    echo "Provided device $ENCRYPTED_DEVICE is NOT valid"
-    exit 1
-else
-    echo "Provided device $ENCRYPTED_DEVICE is valid"
+# Display information about defautl values being pulled from the env
+# if no arguments are provided to this script
+if [$# -eq 0 ]; then
+    echo "No params were provided. Using environment based defaults"
     echo
 fi
 
+# Set the device path using an env var if not device path was provided.
+# If no value was provided, and no env var exists, throw an error
+if [ -z $ENCRYPTED_DEVICE ]; then
+    if [ -z $SECURE_STORAGE_DEVICE_PATH ]; then
+        echo "Env var SECURE_STORAGE_DEVICE_PATH is not set"
+        echo "Set this env var or provide a device using the -d param"
+        exit 1
+    else
+        ENCRYPTED_DEVICE=$SECURE_STORAGE_DEVICE_PATH
+        echo "Using $ENCRYPTED_DEVICE as encrypted storage source"
+        echo
+    fi
+fi
+
+# Verify the device path points to an actual device
+if [ ! -b $ENCRYPTED_DEVICE ]; then
+    echo "Encrypted device $ENCRYPTED_DEVICE is NOT valid"
+    exit 1
+else
+    echo "Encrypted device $ENCRYPTED_DEV is valid"
+fi
+
 # Set the mount directory using an env var, if a arg
-# was not provided for this value. If no env var exists, exit
+# was not provided for this value. If no env var exists 
+# and a value was not provided, exit
 if [ -z $MOUNT_DIRECTORY ]; then
     if [ -z $SECURE_STORAGE_DIRECTORY ]; then
-        echo "No mount directory provided and SECURE_STORAGE_DIRECTORY is not set"
+        echo "Env var SECURE_STORAGE_DIRECTORY is not set"
+        echo "Set this env var or provide a directory using the -s param"
         exit 1
     else
         MOUNT_DIRECTORY=$SECURE_STORAGE_DIRECTORY
@@ -79,7 +103,7 @@ fi
 
 # Verify the mount directory is a valid directory
 if [ ! -d $MOUNT_DIRECTORY ]; then
-    echo "Provided mount directory $MOUNT_DIRECTORY is not valid"
+    echo "Mount directory $MOUNT_DIRECTORY is not valid"
     exit 1
 fi
 
